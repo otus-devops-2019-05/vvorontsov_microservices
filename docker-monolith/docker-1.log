@@ -1,0 +1,6 @@
+REPOSITORY                                      TAG                 IMAGE ID            CREATED              SIZE
+yourname/ubuntu-tmp-file                        latest              59fb83a9353c        About a minute ago   117MB
+ubuntu                                          16.04               7e87e2b3bf7a        6 months ago         117MB
+hello-world					latest              fce289e99eb9        1 day ago            1.84kB
+
+Контейнеры запускаются из образа и имеют дополнительные настройки: сеть, выделяемые ресурсы, точки монтирования, имя и т.п.
