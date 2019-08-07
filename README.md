@@ -1,3 +1,85 @@
+## HomeWork #14 (docker-4)
+#### Самостоятельная работа 
+- Протестировал работу всех [network drivers](https://docs.docker.com/network/):
+
+`bridge`: The default network driver. If you don’t specify a driver, this is the type of network you are creating. Bridge networks are usually used when your applications run in standalone containers that need to communicate.
+
+`host`: For standalone containers, remove network isolation between the container and the Docker host, and use the host’s networking directly. host is only available for swarm services on Docker 17.06 and higher. See use the host network.
+
+`overlay`: Overlay networks connect multiple Docker daemons together and enable swarm services to communicate with each other. You can also use overlay networks to facilitate communication between a swarm service and a standalone container, or between two standalone containers on different Docker daemons. This strategy removes the need to do OS-level routing between these containers. See overlay networks.
+
+`macvlan`: Macvlan networks allow you to assign a MAC address to a container, making it appear as a physical device on your network. The Docker daemon routes traffic to containers by their MAC addresses. Using the macvlan driver is sometimes the best choice when dealing with legacy applications that expect to be directly connected to the physical network, rather than routed through the Docker host’s network stack. See Macvlan networks.
+
+`none`: For this container, disable all networking. Usually used in conjunction with a custom network driver. none is not available for swarm services. See disable container networking.
+
+- Создал docker-compose для приложения reddit:
+```
+version: '3.3'
+services:
+  post_db:
+    image: mongo:3.2
+    volumes:
+      - post_db:/data/db
+    networks:
+      - back_net
+  ui:
+    build: ./ui
+    image: ${USER_NAME}/ui:${VERSION}
+    ports:
+      - ${HOST_PORT}:${SERVICE_PORT}/tcp
+    networks:
+      - front_net
+  post:
+    build: ./post-py
+    image: ${USER_NAME}/post:${VERSION}
+    networks:
+      - back_net
+      - front_net
+  comment:
+    build: ./comment
+    image: ${USER_NAME}/comment:${VERSION}
+    networks:
+      - back_net
+      - front_net
+volumes:
+  post_db:
+
+networks:
+  front_net:
+  back_net:
+
+```
+Переменные подставляются из .env файла:
+```
+COMPOSE_PROJECT_NAME=dockermicroservices
+USER_NAME=xvikx
+HOST_PORT=9292
+SERVICE_PORT=9292
+VERSION=2.0
+```
+P.S. `COMPOSE_PROJECT_NAME` устанавливает префикс для контейнеров и сетей.
+
+- Создал docker-compose.override.yml файл для переопределения volumes и запуска puma.
+```
+version: '3.3'
+services:
+  ui:
+    command: ["puma", "--debug", "-w", "2"]
+    volumes:
+      - ./ui:/app
+
+  post:
+    volumes:
+      - ./post-py:/app
+
+  comment:
+    command: ["puma", "--debug", "-w", "2"]
+    volumes:
+      - ./comment:/app
+
+```
+В [документации сказано](https://docs.docker.com/compose/extends/), что при запуске `docker-compose up`, переопределения применяются автоматически.
+
 ## HomeWork #13 (docker-3)
 #### Самостоятельная работа 
 - Приложение docker-monolith разбил на микросервисы:
