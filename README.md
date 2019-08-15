@@ -1,3 +1,103 @@
+## HomeWork #15 (gitlab-ci-1)
+- С помощью docker-machine создал VM для gitlab-ci:
+
+```
+NAME            ACTIVE   DRIVER   STATE     URL                        SWARM   DOCKER     ERRORS
+docker-gitlab   -        google   Running   tcp://35.205.171.44:2376           v19.03.1   
+```
+- Создал docker-compose файл как описано в документации ([Install GitLab using docker-compose](https://docs.gitlab.com/omnibus/docker/README.html#install-gitlab-using-docker-compose))
+
+- Установил docker-compose и запустил контейнер с gitlab:
+```
+CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS                 PORTS                                                            NAMES
+fea64adcf40d        gitlab/gitlab-ce:latest       "/assets/wrapper"        5 hours ago         Up 5 hours (healthy)   0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp, 0.0.0.0:2222->22/tcp   gitlab_web_1
+
+```
+- Поднял и зарегистрировал `gitlab-runner`:
+
+```
+1a2980824c29        gitlab/gitlab-runner:latest   "/usr/bin/dumb-init …"   5 hours ago         Up 5 hours                                                                              gitlab-runner
+```
+ 
+ - Создал проект и настроил CI:
+ ```
+ image: ruby:2.4.2
+
+stages:
+  - build
+  - test
+  - review
+  - stage
+  - production
+
+variables:
+  DATABASE_URL: 'mongodb://mongo/user_posts'
+
+before_script:
+  - cd reddit
+  - bundle install
+
+build_job:
+  stage: build
+  script:
+    - echo 'Building'
+
+test_unit_job:
+  stage: test
+  services:
+    - mongo:latest
+  script:
+    - ruby simpletest.rb
+
+test_integration_job:
+  stage: test
+  script:
+    - echo 'Testing 2'
+
+deploy_dev_job:
+  stage: review
+  script:
+    - echo 'Deploy'
+  environment:
+    name: dev
+    url: http://dev.example.com
+
+branch review:
+  stage: review
+  script: echo "Deploy to $CI_ENVIRONMENT_SLUG"
+  environment:
+    name: branch/$CI_COMMIT_REF_NAME
+    url: http://$CI_ENVIRONMENT_SLUG.example.com
+  only:
+    - branches
+  except:
+    - master
+
+stage:
+  stage: stage
+  when: manual
+  only:
+    - /^\d+\.\d+\.\d+/
+  script:
+    - echo 'Deploy'
+  environment:
+    name: stage
+    url: https://beta.example.com
+
+production:
+  stage: production
+  when: manual
+  only:
+    - /^\d+\.\d+\.\d+/
+  script:
+    - echo 'Deploy'
+  environment:
+    name: production
+    url: https://example.com
+
+ ```
+ 
+
 ## HomeWork #14 (docker-4)
 #### Самостоятельная работа 
 - Протестировал работу всех [network drivers](https://docs.docker.com/network/):
