@@ -1,3 +1,97 @@
+## HomeWork #16 (monitoring-1)
+- Сконфигурирован и запущен Prometheus в докере:
+```
+# Dockerfile
+FROM prom/prometheus:v2.1.0
+ADD prometheus.yml /etc/prometheus/
+```
+```
+# prometheus.yml
+---
+global:
+  scrape_interval: '5s'
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+        - 'localhost:9090'
+
+  - job_name: 'ui'
+    static_configs:
+      - targets:
+        - 'ui:9292'
+
+  - job_name: 'comment'
+    static_configs:
+      - targets:
+        - 'comment:9292'
+
+```
+- Настроен сбор метрик хоста с использованием node экспортера:
+```
+  - job_name: 'node'
+    static_configs:
+      - targets:
+        - 'node-exporter:9100' 
+
+```
+- Сбилдил образы и залил на docker hub:
+https://cloud.docker.com/u/xvikx
+
+#### Задание со *
+1.Добавил в Prometheus мониторинг MongoDB с использованием [percona/mongodb_exporter](https://github.com/percona/mongodb_exporter)
+
+- Взял текущую версию экспортера, сбилдил образ и залил в свой реп на docker hub:
+https://cloud.docker.com/repository/docker/xvikx/mongodb-exporter
+
+- В конфиг прометея добавил job:
+```
+  - job_name: 'mongodb'
+    static_configs:
+      - targets:
+        - 'mongodb-exporter:9216'
+```
+- В docker-compose добавил запуск контейнера. Переменная `${MONGODB_HOST}` устанавливается в .env файле:
+```
+  mongodb-exporter:
+    image: ${USER_NAME}/mongodb-exporter:latest
+    environment:
+      - MONGODB_URI=mongodb://${MONGODB_HOST}:27017
+    networks:
+      - back_net
+
+```
+2. Настроил blackbox мониторинг http запросов c помощью `prom/blackbox-exporter`
+```
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.14.0
+    cap_add:
+      - CAP_NET_RAW
+    ports:
+      - '9115:9115'
+    networks:
+      - back_net
+
+```
+- Добавил job для прометея:
+```
+  - job_name: 'blackbox'
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    static_configs:
+      - targets:
+        - 'localhost:9090'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+```
+
 ## HomeWork #15 (gitlab-ci-1)
 - С помощью docker-machine создал VM для gitlab-ci:
 
