@@ -40,12 +40,45 @@ grafana:
 
 - Создал дашборд для мониторинга работы сервисов  [UI_Service_Monitoring.json](https://github.com/otus-devops-2019-05/vvorontsov_microservices/blob/monitoring-2/monitoring/grafana/dashboards/UI_Service_Monitoring.json)
 - Создал дашборд для мониторинга бизнес-метрик [Business_Logic_Monitoring.json](https://github.com/otus-devops-2019-05/vvorontsov_microservices/blob/monitoring-2/monitoring/grafana/dashboards/Business_Logic_Monitoring.json)
+- Добавил alertmanager
 ```
-  - post_count 
-  - comment_count
+  alertmanager:
+    image: ${USER_NAME}/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+    ports:
+      - 9093:9093
+    networks:
+      - back_net
 ```
-- Добавил alertmanager с отправкой в slack
+   Настроил интеграцию alertmanager со slack:
+```
+global:
+  slack_api_url: 'https://hooks.slack.com/services/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'
 
+route:
+  receiver: 'slack-notifications'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#viktor_vorontsov'
+```
+   Настриол правило оповещения при недоступности любого сервиса:
+ ```
+ groups:
+  - name: alert.rules
+    rules:
+    - alert: InstanceDown
+      expr: up == 0
+      for: 1m
+      labels:
+        severity: page
+      annotations:
+        description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute'
+        summary: 'Instance {{ $labels.instance }} down'
+ ```
+ - Все образы запушил в свой docker hub https://cloud.docker.com/u/xvikx
 ## HomeWork #16 (monitoring-1)
 - Сконфигурирован и запущен Prometheus в докере:
 ```
