@@ -1,3 +1,51 @@
+## HomeWork #17 (monitoring-2)
+- Отделил контейнеры с приложением и мониторингом:
+
+   [docker-compose-monitoring.yml](https://github.com/otus-devops-2019-05/vvorontsov_microservices/blob/monitoring-2/docker/docker-compose-monitoring.yml)
+
+   [docker-compose.yml](https://github.com/otus-devops-2019-05/vvorontsov_microservices/blob/monitoring-2/docker/docker-compose.yml)
+
+- Добавил в мониторинг cAdvisor:
+```
+cadvisor:
+    image: google/cadvisor:v0.29.0
+    volumes:
+      - '/:/rootfs:ro'
+      - '/var/run:/var/run:rw'
+      - '/sys:/sys:ro'
+      - '/var/lib/docker/:/var/lib/docker:ro'
+    ports:
+      - '8080:8080'
+    networks:
+      - back_net
+```
+- Добавил в мониторинг Grafana:
+```
+grafana:
+    image: grafana/grafana:5.0.0
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=secret
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    networks:
+      - back_net
+```
+
+- Добавил дашбоард [Docker and system monitoring](https://grafana.com/grafana/dashboards/893)
+
+- Создал дашборд для мониторинга работы сервисов  [UI_Service_Monitoring.json](https://github.com/otus-devops-2019-05/vvorontsov_microservices/blob/monitoring-2/monitoring/grafana/dashboards/UI_Service_Monitoring.json)
+- Создал дашборд для мониторинга бизнес-метрик [Business_Logic_Monitoring.json](https://github.com/otus-devops-2019-05/vvorontsov_microservices/blob/monitoring-2/monitoring/grafana/dashboards/Business_Logic_Monitoring.json)
+```
+  - post_count 
+  - comment_count
+```
+- Добавил alertmanager с отправкой в slack
+
 ## HomeWork #16 (monitoring-1)
 - Сконфигурирован и запущен Prometheus в докере:
 ```
