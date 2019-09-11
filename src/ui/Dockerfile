@@ -1,4 +1,4 @@
-FROM alpine:3.9
+FROM ruby:2.3.3
 
 ENV APP_HOME /app
 RUN mkdir $APP_HOME
@@ -6,11 +6,9 @@ RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
 COPY . $APP_HOME
 
-RUN apk update && apk add --no-cache build-base ruby-full ruby-dev ruby-bundler \
-    && gem install bundler --no-ri --no-rdoc \
+RUN apt-get update -qq && apt-get install -y build-essential \
     && bundle install \
-    && rm -rf /var/cache/* \
-    && rm -rf /root/.cache/*
+    && rm -rf /var/lib/apt/lists/*
 
 ENV POST_SERVICE_HOST post
 ENV POST_SERVICE_PORT 5000
