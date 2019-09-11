@@ -1,3 +1,162 @@
+## HomeWork #18 (logging-1)
+- Собрал образ fluentd с необходимыми плагинами:
+```
+# Dockerfile
+FROM fluent/fluentd:v0.12
+RUN gem install fluent-plugin-elasticsearch --no-rdoc --no-ri --version 1.9.5
+RUN gem install fluent-plugin-grok-parser --no-rdoc --no-ri --version 1.0.0
+ADD fluent.conf /fluentd/etc
+```
+- Создал конфиг для fluentd :
+```
+<source>
+  @type forward
+  port 24224
+  bind 0.0.0.0
+</source>
+
+<match *.**>
+  @type copy
+  <store>
+    @type elasticsearch
+    host elasticsearch
+    port 9200
+    logstash_format true
+    logstash_prefix fluentd
+    logstash_dateformat %Y%m%d
+    include_tag_key true
+    type_name access_log
+    tag_key @log_name
+    flush_interval 1s
+  </store>
+  <store>
+    @type stdout
+  </store>
+</match>
+```
+- Создал файл docker-compose-logging.yml для EFK стэка. Для elasticsearch и kibana пришлось установить environment variables чтобы всё заработало. Официальная документация elastic:
+
+  [Install Elasticsearch with Docker](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker)
+
+  [Running Kibana on Docker](https://www.elastic.co/guide/en/kibana/current/docker.html#docker)
+
+```
+version: '3'
+
+services:
+  fluentd:
+    image: ${USER_NAME}/fluentd
+    container_name: fluentd
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    networks:
+      - back_net
+
+  elasticsearch:
+    image: elasticsearch:7.3.1
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=docker-cluster
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xmx256m -Xms256m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - back_net
+
+  kibana:
+    image: kibana:7.3.1
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - back_net
+
+volumes:
+  es_data:
+
+networks:
+  front_net:
+  back_net:
+```
+- Для сервисов ui и post в качестве logging driver установил fluentd:
+
+```
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: service.name
+```
+
+- Настроил для fluentd фильтры логов:
+```
+# фильтр структурированных логов (json)
+<filter service.post>
+  @type parser
+  format json
+  key_name log
+</filter>
+```
+   
+```
+# фильтр неструктурированных логов (grok)
+<filter service.ui>
+  @type parser
+  key_name log
+  format grok
+  grok_pattern %{RUBY_LOGGER}
+</filter>
+<filter service.ui>
+  @type parser
+  format grok
+  <grok>
+    pattern service=%{WORD:service} \| event=%{WORD:event} \| request_id=%{GREEDYDATA:request_id} \| message='%{GREEDYDATA:message}'
+  </grok>
+  key_name message
+  reserve_data true
+</filter>
+```
+- Добавил zipkin для трассировки запросов к нашему приложению:
+
+```
+ zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - back_net
+      - front_net 
+```
+
+#### Задание со *
+1. Доработал grok фильтр для парсинга сообщений такого формата: `service=ui | event=request | path=/ | request_id=a9df9574-47d0-45fb-ace7-4d43f1216a46 | remote_addr=92.241.102.253 | method= GET | response_status=200`
+
+```
+pattern service=%{WORD:service} \| event=%{WORD:event} \| path=%{URIPATH:path} \| request_id=%{GREEDYDATA:request_id} \| remote_addr=%{IPV4:remote_addr} \| method=%{GREEDYDATA:method} \| response_status=%{INT:response_status}
+```
+Для отладки фильтров можно использовать [Grok Debugger](https://grokdebug.herokuapp.com/)
+
+2. С помощью zipkin нашел баг в коде, который подвешивает post сервис на 3 секунды:
+![](https://github.com/otus-devops-2019-05/vvorontsov_microservices/blob/logging-1/.github/zipkin.jpg)
+```
+# Retrieve information about a post
+def find_post(id):
+---
+        app.post_read_db_seconds.observe(resp_time)
+        time.sleep(3)
+        log_event('info', 'post_find',
+                  'Successfully found the post information',
+                  {'post_id': id})
+        return dumps(post)
+```
 ## HomeWork #17 (monitoring-2)
 - Отделил контейнеры с приложением и мониторингом:
 
