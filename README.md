@@ -1,3 +1,28 @@
+## HomeWork #19 (kubernetes-1)
+- Развернул кластер Kubernetes используя инструкции в [Kubernetes The Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way) и разобрался с основными его компонентами.
+
+- Создал deployment файлы для приложения reddit:
+```
+ - kubernetes/reddit/comment-deployment.yml
+ - kubernetes/reddit/mongo-deployment.yml
+ - kubernetes/reddit/post-deployment.yml
+ - kubernetes/reddit/ui-deployment.yml
+
+```
+- Запустил контейнеры с приложением reddit:
+```
+➜  the_hard_way git:(kubernetes-1) ✗ kubectl get pods -o wide 
+NAME                                  READY   STATUS    RESTARTS   AGE   IP            NODE       NOMINATED NODE   READINESS GATES
+busybox-78c88d76df-4fgdn              1/1     Running   11         11h   10.200.0.4    worker-0   <none>           <none>
+comment-deployment-7dfd97bb5d-gmxxd   1/1     Running   0          10h   10.200.0.8    worker-0   <none>           <none>
+mongo-deployment-86d49445c4-ndkgz     1/1     Running   0          10h   10.200.0.10   worker-0   <none>           <none>
+nginx-7bb7cd8db5-gnh8f                1/1     Running   0          11h   10.200.0.5    worker-0   <none>           <none>
+post-deployment-7bc8df4f55-mhlhq      1/1     Running   0          10h   10.200.0.7    worker-0   <none>           <none>
+ui-deployment-95f7bf4cd-wn2lm         1/1     Running   0          10h   10.200.0.9    worker-0   <none>           <none>
+untrusted                             1/1     Running   0          11h   10.200.0.6    worker-0   <none>           <none>
+
+```
+
 ## HomeWork #18 (logging-1)
 - Собрал образ fluentd с необходимыми плагинами:
 ```
