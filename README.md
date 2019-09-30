@@ -1,3 +1,15 @@
+## HomeWork #20 (kubernetes-2)
+- Развернул локальное окружение для работы с Kubernetes
+- Развернул Kubernetes в GKE
+```
+➜  vvorontsov_microservices git:(kubernetes-2) ✗ kubectl get nodes -o wide
+NAME                                                STATUS   ROLES    AGE     VERSION         INTERNAL-IP   EXTERNAL-IP      OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
+gke-standard-cluster-1-default-pool-1221882e-28j5   Ready    <none>   8m50s   v1.13.7-gke.8   10.128.0.3    35.222.133.4     Container-Optimized OS from Google   4.14.127+        docker://18.9.3
+gke-standard-cluster-1-default-pool-1221882e-86r6   Ready    <none>   8m48s   v1.13.7-gke.8   10.128.0.4    35.226.193.250   Container-Optimized OS from Google   4.14.127+        docker://18.9.3
+
+```
+- Запустил reddit в Kubernetes: http://35.222.133.4:30325
+
 ## HomeWork #19 (kubernetes-1)
 - Развернул кластер Kubernetes используя инструкции в [Kubernetes The Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way) и разобрался с основными его компонентами.
 
