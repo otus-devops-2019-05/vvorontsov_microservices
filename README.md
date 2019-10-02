@@ -1,3 +1,81 @@
+## HomeWork #21 (kubernetes-3)
+Создал следующие ресурсы:
+- LoadBalancer Service
+```
+➜  reddit git:(kubernetes-3) ✗ kubectl get service  -n dev --selector component=ui
+NAME   TYPE           CLUSTER-IP   EXTERNAL-IP     PORT(S)        AGE
+ui     LoadBalancer   10.77.6.30   34.76.209.112   80:32092/TCP   4m35s
+```
+- Ingress
+```
+➜  vvorontsov_microservices git:(kubernetes-3) kubectl get ingress -n dev 
+NAME   HOSTS   ADDRESS         PORTS     AGE
+ui     *       35.244.232.51   80, 443   69m
+```
+- Secret (*)
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ui-ingress
+  labels:
+    app: reddit
+    component: ui
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTi...
+  tls.key: LS0tLS1CRUdJTi...
+
+```
+
+```
+➜  vvorontsov_microservices git:(kubernetes-3) kubectl get secret -n dev 
+NAME                  TYPE                                  DATA   AGE
+default-token-b6j6s   kubernetes.io/service-account-token   3      105m
+ui-ingress            kubernetes.io/tls                     2      57m
+
+```
+- TLS сертификат и ключ
+
+`openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=35.244.232.51"`
+
+- Network Policies
+```
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-db-traffic
+  labels:
+    app: reddit
+spec:
+  podSelector:
+    matchLabels:
+      app: reddit
+      component: mongo
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: reddit
+          component: comment
+    - podSelector:
+        matchLabels:
+          app: reddit
+          component: post      
+
+```
+- PersistentVolumes, PersistentVolumeClaims
+```
+➜  reddit git:(kubernetes-3) ✗ kubectl get persistentvolume -n dev
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM                   STORAGECLASS   REASON   AGE
+pvc-52faeec9-e461-11e9-87b3-42010a840072   10Gi       RWO            Delete           Bound       dev/mongo-pvc-dynamic   fast                    67s
+pvc-724a50de-e460-11e9-87b3-42010a840072   15Gi       RWO            Delete           Bound       dev/mongo-pvc           standard                7m24s
+reddit-mongo-disk                          25Gi       RWO            Retain           Available     
+```
+
 ## HomeWork #20 (kubernetes-2)
 - Развернул локальное окружение для работы с Kubernetes
 - Развернул Kubernetes в GKE
