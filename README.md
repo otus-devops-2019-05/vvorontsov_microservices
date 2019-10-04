@@ -12,7 +12,22 @@ gitlab-gitlab-postgresql-7b99699f5b-zt97p   1/1     Running   0          174m
 gitlab-gitlab-redis-58bdb6bb8b-q9srb        1/1     Running   0          3h11m
 gitlab-gitlab-runner-558c8695b8-xqnkt       1/1     Running   8          174m
 ```
-- Создал файл .gitlab-ci для каждого проекта
+- Создал проекты для билда сервисов и проект для деплоя приложения reddit
+```
+ -reddit-deploy
+- post
+- ui
+- comment
+```
+- Создал для всех проектов файлы  .gitlab-ci
+- Потестировал pipline с auto_devops и с динамическими окружениями. 
+- Переписал все pipline'ы без использования auto_devops
+
+#### Задание со *
+- Настроил деплой по триггеру согласно документации Gitlab ([Triggering pipelines through the API
+](https://docs.gitlab.com/ee/ci/triggers/))
+
+`curl --request POST --form token=$DEPLOY --form ref=master http://gitlab-gitlab/api/v4/projects/4/trigger/pipeline`
 
 ## HomeWork #21 (kubernetes-3)
 Создал следующие ресурсы:
