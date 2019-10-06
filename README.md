@@ -1,3 +1,43 @@
+## HomeWork #23 (kubernetes-5)
+- В кластере k8s развернул из chart'а prometheus и несколько инстансов приложения reddit в разных окружениях:
+```
+➜  kubernetes git:(kubernetes-5) helm ls
+NAME            REVISION        UPDATED                         STATUS          CHART                   APP VERSION     NAMESPACE
+nginx           1               Fri Oct  4 22:09:53 2019        DEPLOYED        nginx-ingress-1.24.0    0.26.1          default
+production      1               Fri Oct  4 22:47:48 2019        DEPLOYED        reddit-1.0.0            1               production
+prom            8               Sat Oct  5 18:57:17 2019        DEPLOYED        prometheus-9.1.1        2.11.1          default
+reddit-test     1               Fri Oct  4 22:47:20 2019        DEPLOYED        reddit-1.0.0            1               default
+staging         1               Fri Oct  4 22:48:15 2019        DEPLOYED        reddit-1.0.0            1               staging
+```
+- Для prometheus создан файл [custom-values.yml](https://github.com/otus-devops-2019-05/vvorontsov_microservices/blob/kubernetes-5/kubernetes/Charts/prometheus/custom_values.yml) в который добавлены настройки endpoints для сервисов приложения. Также включен node-exporter и настроен Service Discovery.
+
+`helm upgrade prom . -f custom_values.yml --install`
+
+- Развернул в кластере grafana:
+```
+helm upgrade --install grafana stable/grafana \
+--set "adminPassword=admin" \
+--set "service.type=NodePort" \
+--set "ingress.enabled=true" \
+--set "ingress.hosts={reddit-grafana}"
+```
+
+- Загрузил и кастомизировал дашборды для grafana:
+```
+➜  kubernetes git:(kubernetes-5) tree ./Charts/prometheus/dashboards
+./Charts/prometheus/dashboards
+├── Business_Logic_Monitoring-1570381023663.json
+├── Docker_and_system_monitoring-1570381007597.json
+├── Kubernetes_cluster_monitoring-1570380968800.json
+├── Kubernetes_Deployment_metrics-1570381042241.json
+└── UI_Service_Monitoring-1570381074900.json
+```
+Добавил возможность фильтровать графики с метриками сервисов по namespace:
+
+```
+"expr": "rate(post_count{kubernetes_namespace=~\"$namespace\"}[1h])",
+"expr":"rate(ui_request_count{kubernetes_namespace=~\"$namespace\",http_status=\"200\"}[1m])",
+```
 ## HomeWork #22 (kubernetes-4)
 - Создал кластер kubernetes в GCP
 - Составил Helm Chart'ы для всех сервисов (ui, post, comment, mongodb)
