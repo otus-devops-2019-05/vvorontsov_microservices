@@ -35,8 +35,8 @@ helm upgrade --install grafana stable/grafana \
 Добавил возможность фильтровать графики с метриками сервисов по namespace:
 
 ```
-"expr": "rate(post_count{kubernetes_namespace=~\"$namespace\"}[1h])",
-"expr":"rate(ui_request_count{kubernetes_namespace=~\"$namespace\",http_status=\"200\"}[1m])",
+"expr": "rate(post_count{kubernetes_namespace=~\"$namespace\"}[1h])"
+"expr":"rate(ui_request_count{kubernetes_namespace=~\"$namespace\",http_status=\"200\"}[1m])"
 ```
 ## HomeWork #22 (kubernetes-4)
 - Создал кластер kubernetes в GCP
