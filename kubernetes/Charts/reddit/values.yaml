@@ -1,0 +1,20 @@
+comment:
+  image:
+    repository: xvikx/comment
+    tag: latest
+  service:
+    externalPort: 9292
+
+post:
+  image:
+    repository: xvikx/post
+    tag: latest
+  service:
+    externalPort: 5000
+
+ui:
+  image:
+    repository: xvikx/ui
+    tag: latest
+  service:
+    externalPort: 9292

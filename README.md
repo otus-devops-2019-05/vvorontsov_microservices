@@ -1,3 +1,34 @@
+## HomeWork #22 (kubernetes-4)
+- Создал кластер kubernetes в GCP
+- Составил Helm Chart'ы для всех сервисов (ui, post, comment, mongodb)
+- Потестил разворачиваение приложения в кластере k8s с помощью Helm+Tiller
+- Потестил работу [helm2 tiller plugin](https://github.com/rimusz/helm-tiller) и Helm3(beta)
+- Развернул GitLab используя готовый Chart из репозитория:
+```
+➜  gitlab-omnibus git:(kubernetes-4) kubectl get pods                                                                           
+NAME                                        READY   STATUS    RESTARTS   AGE
+gitlab-gitlab-748cb4b566-mlrld              1/1     Running   2          174m
+gitlab-gitlab-postgresql-7b99699f5b-zt97p   1/1     Running   0          174m
+gitlab-gitlab-redis-58bdb6bb8b-q9srb        1/1     Running   0          3h11m
+gitlab-gitlab-runner-558c8695b8-xqnkt       1/1     Running   8          174m
+```
+- Создал проекты для билда сервисов и проект для деплоя приложения reddit
+```
+ -reddit-deploy
+- post
+- ui
+- comment
+```
+- Создал для всех проектов файлы  .gitlab-ci
+- Потестировал pipline с auto_devops и с динамическими окружениями. 
+- Переписал все pipline'ы без использования auto_devops
+
+#### Задание со *
+- Настроил деплой по триггеру согласно документации Gitlab ([Triggering pipelines through the API
+](https://docs.gitlab.com/ee/ci/triggers/))
+
+`curl --request POST --form token=$DEPLOY --form ref=master http://gitlab-gitlab/api/v4/projects/4/trigger/pipeline`
+
 ## HomeWork #21 (kubernetes-3)
 Создал следующие ресурсы:
 - LoadBalancer Service
